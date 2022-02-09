@@ -45,13 +45,11 @@ def add_user_to_g():
 
 
 @app.before_request
-def add_logout_form_to_g():
+def add_csrf_keys_to_g():
     """If we're logged in, add the WTF CSRF token to the Flask global"""
-    if not g.user:
-        flash("access unauthorized", "danger")
-        return redirect("/")
-    else:
-        g.logout_form = CSRFProtectForm()
+
+    g.logout_form = CSRFProtectForm()
+    g.delete_form = CSRFProtectForm()
 
 
 def do_login(user):
@@ -128,11 +126,11 @@ def logout():
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
-    form = CSRFProtectForm()
+
     if not g.user:
         flash("access unauthorized", "danger")
         return redirect("/")
-    if form.validate_on_submit():
+    if g.logout_form.validate_on_submit():
         do_logout()
         flash("You have been sucessfully logout!")
         return redirect("/")
@@ -240,8 +238,14 @@ def profile():
         if is_password_valid:
             g.user.username = form.username.data
             g.user.email = form.email.data
-            g.user.image_url = form.image_url.data
-            g.user.header_image_url = form.header_image_url.data
+            g.user.image_url = (
+                form.image_url.data if form.image_url.data != "" else DEFAULT_IMAGE
+            )
+            g.user.header_image_url = (
+                form.header_image_url.data
+                if form.header_image_url.data != ""
+                else DEFAULT_HEADER_IMAGE
+            )
             g.user.bio = form.bio.data
 
             db.session.commit()
@@ -255,6 +259,7 @@ def profile():
         return render_template("/users/edit.html", form=form)
 
 
+# TODO: add CSRF token
 @app.post("/users/delete")
 def delete_user():
     """Delete user."""
@@ -263,12 +268,16 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    if g.delete_form.validate_on_submit():
 
-    db.session.delete(g.user)
-    db.session.commit()
+        do_logout()
 
-    return redirect("/signup")
+        Message.query.filter(Message.user_id == g.user.id).delete()
+        db.session.delete(g.user)
+        db.session.commit()
+
+        flash("User was deleted", "warning")
+        return redirect("/signup")
 
 
 ##############################################################################

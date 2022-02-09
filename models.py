@@ -5,6 +5,9 @@ from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 
+DEFAULT_IMAGE = "/static/images/default-pic.png"
+DEFAULT_HEADER_IMAGE = "/static/images/warbler-hero.jpg"
+
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 
@@ -12,17 +15,17 @@ db = SQLAlchemy()
 class Follows(db.Model):
     """Connection of a follower <-> followed_user."""
 
-    __tablename__ = 'follows'
+    __tablename__ = "follows"
 
     user_being_followed_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete="cascade"),
+        db.ForeignKey("users.id", ondelete="cascade"),
         primary_key=True,
     )
 
     user_following_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete="cascade"),
+        db.ForeignKey("users.id", ondelete="cascade"),
         primary_key=True,
     )
 
@@ -30,7 +33,7 @@ class Follows(db.Model):
 class User(db.Model):
     """User in the system."""
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = db.Column(
         db.Integer,
@@ -51,13 +54,10 @@ class User(db.Model):
 
     image_url = db.Column(
         db.Text,
-        default="/static/images/default-pic.png",
+        default=DEFAULT_IMAGE,
     )
 
-    header_image_url = db.Column(
-        db.Text,
-        default="/static/images/warbler-hero.jpg"
-    )
+    header_image_url = db.Column(db.Text, default=DEFAULT_HEADER_IMAGE)
 
     bio = db.Column(
         db.Text,
@@ -72,20 +72,20 @@ class User(db.Model):
         nullable=False,
     )
 
-    messages = db.relationship('Message', order_by='Message.timestamp.desc()')
+    messages = db.relationship("Message", order_by="Message.timestamp.desc()")
 
     followers = db.relationship(
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_being_followed_id == id),
-        secondaryjoin=(Follows.user_following_id == id)
+        secondaryjoin=(Follows.user_following_id == id),
     )
 
     following = db.relationship(
         "User",
         secondary="follows",
         primaryjoin=(Follows.user_following_id == id),
-        secondaryjoin=(Follows.user_being_followed_id == id)
+        secondaryjoin=(Follows.user_being_followed_id == id),
     )
 
     def __repr__(self):
@@ -110,7 +110,7 @@ class User(db.Model):
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode("UTF-8")
 
         user = User(
             username=username,
@@ -146,7 +146,7 @@ class User(db.Model):
 class Message(db.Model):
     """An individual message ("warble")."""
 
-    __tablename__ = 'messages'
+    __tablename__ = "messages"
 
     id = db.Column(
         db.Integer,
@@ -166,11 +166,11 @@ class Message(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE'),
+        db.ForeignKey("users.id", ondelete="cascade"),
         nullable=False,
     )
 
-    user = db.relationship('User')
+    user = db.relationship("User", cascade="all, delete")
 
 
 def connect_db(app):
