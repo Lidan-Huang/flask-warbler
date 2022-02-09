@@ -46,6 +46,7 @@ def add_user_to_g():
 
 @app.before_request
 def add_logout_form_to_g():
+    """If we're logged in, add the WTF CSRF token to the Flask global"""
     if not g.user:
         flash("access unauthorized", "danger")
         return redirect("/")
@@ -184,7 +185,7 @@ def show_following(user_id):
 @app.get("/users/<int:user_id>/followers")
 def users_followers(user_id):
     """Show list of followers of this user."""
-  
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -329,16 +330,22 @@ def homepage():
     """Show homepage:
 
     - anon users: no messages
-    - logged in: 100 most recent messages of followed_users
+    - logged in: 100 most recent messages of followed_users / self
     """
 
     if g.user:
         following_ids = [f.id for f in g.user.following]
+        print(following_ids)
+        messages = (
+            Message.query.filter(
+                or_(Message.user_id.in_(following_ids), Message.user_id == g.user.id)
+            )
+            .order_by(Message.timestamp.desc())
+            .limit(100)
+            .all()
+        )
 
-        messages = Message.query\
-            .filter(or_(Message.user_id == g.user.id, Message.user_id in following_ids))\
-            .order_by(Message.timestamp.desc())\
-            .limit(100).all()
+        print(messages)
 
         return render_template("home.html", messages=messages)
 
