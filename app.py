@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -118,6 +118,18 @@ def logout():
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
 
+    logout_form = CSRFProtectForm()
+
+    if not g.user:
+        flash("access unauthorized", "danger")
+        return redirect("/")
+    if logout_form.validate_on_submit():
+        do_logout()
+        return redirect("/")
+    else:
+        flash("access unauthorized", "danger")
+        return redirect("/")
+
 
 ##############################################################################
 # General user routes:
@@ -129,7 +141,7 @@ def list_users():
 
     Can take a 'q' param in querystring to search by that username.
     """
-
+    logout_form = CSRFProtectForm()
     search = request.args.get("q")
 
     if not search:
@@ -137,40 +149,41 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template("users/index.html", users=users)
+    return render_template("users/index.html", users=users, logout_form=logout_form)
 
 
 @app.get("/users/<int:user_id>")
 def users_show(user_id):
     """Show user profile."""
 
+    logout_form = CSRFProtectForm()
     user = User.query.get_or_404(user_id)
 
-    return render_template("users/show.html", user=user)
+    return render_template("users/show.html", user=user, logout_form=logout_form)
 
 
 @app.get("/users/<int:user_id>/following")
 def show_following(user_id):
     """Show list of people this user is following."""
-
+    logout_form = CSRFProtectForm()
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template("users/following.html", user=user)
+    return render_template("users/following.html", user=user, logout_form=logout_form)
 
 
 @app.get("/users/<int:user_id>/followers")
 def users_followers(user_id):
     """Show list of followers of this user."""
-
+    logout_form = CSRFProtectForm()
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template("users/followers.html", user=user)
+    return render_template("users/followers.html", user=user, logout_form=logout_form)
 
 
 @app.post("/users/follow/<int:follow_id>")
@@ -236,6 +249,7 @@ def messages_add():
 
     Show form if GET. If valid, update message and redirect to user page.
     """
+    logout_form = CSRFProtectForm()
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -250,15 +264,17 @@ def messages_add():
 
         return redirect(f"/users/{g.user.id}")
 
-    return render_template("messages/new.html", form=form)
+    return render_template("messages/new.html", form=form, logout_form=logout_form)
 
 
 @app.get("/messages/<int:message_id>")
 def messages_show(message_id):
     """Show a message."""
 
+    logout_form = CSRFProtectForm()
+
     msg = Message.query.get(message_id)
-    return render_template("messages/show.html", message=msg)
+    return render_template("messages/show.html", message=msg, logout_form=logout_form)
 
 
 @app.post("/messages/<int:message_id>/delete")
@@ -288,10 +304,12 @@ def homepage():
     - logged in: 100 most recent messages of followed_users
     """
 
+    logout_form = CSRFProtectForm()
+
     if g.user:
         messages = Message.query.order_by(Message.timestamp.desc()).limit(100).all()
 
-        return render_template("home.html", messages=messages)
+        return render_template("home.html", messages=messages, logout_form=logout_form)
 
     else:
         return render_template("home-anon.html")
