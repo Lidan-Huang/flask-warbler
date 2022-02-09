@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
@@ -13,12 +16,13 @@ app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
-app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"].replace(
+    "postgres://", "postgresql://"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ECHO"] = False
+app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = True
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
@@ -52,7 +56,7 @@ def do_logout():
         del session[CURR_USER_KEY]
 
 
-@app.route('/signup', methods=["GET", "POST"])
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
     """Handle user signup.
 
@@ -77,38 +81,37 @@ def signup():
             db.session.commit()
 
         except IntegrityError:
-            flash("Username already taken", 'danger')
-            return render_template('users/signup.html', form=form)
+            flash("Username already taken", "danger")
+            return render_template("users/signup.html", form=form)
 
         do_login(user)
 
         return redirect("/")
 
     else:
-        return render_template('users/signup.html', form=form)
+        return render_template("users/signup.html", form=form)
 
 
-@app.route('/login', methods=["GET", "POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """Handle user login."""
 
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.authenticate(form.username.data,
-                                 form.password.data)
+        user = User.authenticate(form.username.data, form.password.data)
 
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
             return redirect("/")
 
-        flash("Invalid credentials.", 'danger')
+        flash("Invalid credentials.", "danger")
 
-    return render_template('users/login.html', form=form)
+    return render_template("users/login.html", form=form)
 
 
-@app.post('/logout')
+@app.post("/logout")
 def logout():
     """Handle logout of user."""
 
@@ -119,33 +122,34 @@ def logout():
 ##############################################################################
 # General user routes:
 
-@app.get('/users')
+
+@app.get("/users")
 def list_users():
     """Page with listing of users.
 
     Can take a 'q' param in querystring to search by that username.
     """
 
-    search = request.args.get('q')
+    search = request.args.get("q")
 
     if not search:
         users = User.query.all()
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users)
+    return render_template("users/index.html", users=users)
 
 
-@app.get('/users/<int:user_id>')
+@app.get("/users/<int:user_id>")
 def users_show(user_id):
     """Show user profile."""
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template("users/show.html", user=user)
 
 
-@app.get('/users/<int:user_id>/following')
+@app.get("/users/<int:user_id>/following")
 def show_following(user_id):
     """Show list of people this user is following."""
 
@@ -154,10 +158,10 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    return render_template("users/following.html", user=user)
 
 
-@app.get('/users/<int:user_id>/followers')
+@app.get("/users/<int:user_id>/followers")
 def users_followers(user_id):
     """Show list of followers of this user."""
 
@@ -166,10 +170,10 @@ def users_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template("users/followers.html", user=user)
 
 
-@app.post('/users/follow/<int:follow_id>')
+@app.post("/users/follow/<int:follow_id>")
 def add_follow(follow_id):
     """Add a follow for the currently-logged-in user."""
 
@@ -184,7 +188,7 @@ def add_follow(follow_id):
     return redirect(f"/users/{g.user.id}/following")
 
 
-@app.post('/users/stop-following/<int:follow_id>')
+@app.post("/users/stop-following/<int:follow_id>")
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user."""
 
@@ -199,14 +203,14 @@ def stop_following(follow_id):
     return redirect(f"/users/{g.user.id}/following")
 
 
-@app.route('/users/profile', methods=["GET", "POST"])
+@app.route("/users/profile", methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
 
     # IMPLEMENT THIS
 
 
-@app.post('/users/delete')
+@app.post("/users/delete")
 def delete_user():
     """Delete user."""
 
@@ -225,7 +229,8 @@ def delete_user():
 ##############################################################################
 # Messages routes:
 
-@app.route('/messages/new', methods=["GET", "POST"])
+
+@app.route("/messages/new", methods=["GET", "POST"])
 def messages_add():
     """Add a message:
 
@@ -245,18 +250,18 @@ def messages_add():
 
         return redirect(f"/users/{g.user.id}")
 
-    return render_template('messages/new.html', form=form)
+    return render_template("messages/new.html", form=form)
 
 
-@app.get('/messages/<int:message_id>')
+@app.get("/messages/<int:message_id>")
 def messages_show(message_id):
     """Show a message."""
 
     msg = Message.query.get(message_id)
-    return render_template('messages/show.html', message=msg)
+    return render_template("messages/show.html", message=msg)
 
 
-@app.post('/messages/<int:message_id>/delete')
+@app.post("/messages/<int:message_id>/delete")
 def messages_destroy(message_id):
     """Delete a message."""
 
@@ -275,7 +280,7 @@ def messages_destroy(message_id):
 # Homepage and error pages
 
 
-@app.get('/')
+@app.get("/")
 def homepage():
     """Show homepage:
 
@@ -284,16 +289,12 @@ def homepage():
     """
 
     if g.user:
-        messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
+        messages = Message.query.order_by(Message.timestamp.desc()).limit(100).all()
 
-        return render_template('home.html', messages=messages)
+        return render_template("home.html", messages=messages)
 
     else:
-        return render_template('home-anon.html')
+        return render_template("home-anon.html")
 
 
 ##############################################################################
@@ -302,6 +303,7 @@ def homepage():
 #   handled elsewhere)
 #
 # https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+
 
 @app.after_request
 def add_header(response):
