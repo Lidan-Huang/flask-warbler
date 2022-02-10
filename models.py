@@ -43,10 +43,9 @@ class Likes(db.Model):
 
     message_being_liked_id = db.Column(
         db.Integer,
-        db.ForeignKey("message.id", ondelete="cascade"),
+        db.ForeignKey("messages.id", ondelete="cascade"),
         primary_key=True,
     )
-
 
 
 class User(db.Model):
@@ -107,7 +106,7 @@ class User(db.Model):
         secondaryjoin=(Follows.user_being_followed_id == id),
     )
 
-    messages_likes = db.relationship(
+    liked_messages = db.relationship(
         "Message",
         secondary="likes",
         primaryjoin=(Likes.user_id == id),
@@ -128,6 +127,14 @@ class User(db.Model):
 
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
+
+    def is_liking(self, message):
+        """Does this user like `message`?"""
+
+        found_messages_list = [
+            msg for msg in self.liked_messages if msg.message_id == message.id
+        ]
+        return len(found_messages_list) == 1
 
     @classmethod
     def signup(cls, username, email, password, image_url):
@@ -198,12 +205,20 @@ class Message(db.Model):
 
     user = db.relationship("User", cascade="all, delete")
 
-    user_likes = db.relationship(
+    liked_by = db.relationship(
         "User",
         secondary="likes",
         primaryjoin=(Likes.user_id == id),
         secondaryjoin=(Likes.message_being_liked_id == id),
     )
+
+    def is_liked_by(self, user):
+        """Is this message liked by `user`?"""
+
+        found_users_list = [
+            liker for liker in self.liked_by if liker.user_id == user.id
+        ]
+        return len(found_users_list) == 1
 
 
 def connect_db(app):
