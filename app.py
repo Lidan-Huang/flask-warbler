@@ -371,7 +371,8 @@ def homepage():
 ##############################################################################
 # ~~ Message Like routes:
 
-
+# TODO: add check against current user liking own warbles, update template to
+# not show likes to self
 @app.post("/msg/like/<int:msg_id>")
 def like_message(msg_id):
     """Show liked messages and update the database"""
