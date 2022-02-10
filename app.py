@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 
 from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -353,7 +353,6 @@ def homepage():
 
     if g.user:
         following_ids = [f.id for f in g.user.following]
-        print(following_ids)
         messages = (
             Message.query.filter(
                 or_(Message.user_id.in_(following_ids), Message.user_id == g.user.id)
@@ -362,8 +361,6 @@ def homepage():
             .limit(100)
             .all()
         )
-
-        print(messages)
 
         return render_template("home.html", messages=messages)
 
@@ -378,14 +375,42 @@ def homepage():
 @app.post("/msg/like/<int:msg_id>")
 def like_message(msg_id):
     """Show liked messages and update the database"""
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
-    msg_liked = Message.query.get(msg_id)
+    if g.csrf_checking.validate_on_submit():
+
+        msg_liked = Message.query.get(msg_id)
+
+        # print(msg_liked)
+        # print(g.user.liked_messages)
+        g.user.liked_messages.append(msg_liked)
+
+        db.session.commit()
+
+        return redirect(f'/users/{g.user.id}/likes')
+    else:
+        return redirect('/')
 
 
-# @app.post('/msg/stop-liking/<int:msg_id>')
-# def stop_liking_message(msg_id):
-#     """Stop liking a liked message and update the DB"""
+@app.post('/msg/stop-liking/<int:msg_id>')
+def stop_liking_message(msg_id):
+    """Stop liking a liked message and update the DB"""
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
+    if g.csrf_checking.validate_on_submit():
+
+        msg_liked = Message.query.get(msg_id)
+
+        g.user.liked_messages.remove(msg_liked)
+        db.session.commit()
+
+        return redirect(f'/users/{g.user.id}')
+    else:
+        return redirect('/')
 
 ##############################################################################
 # Turn off all caching in Flask

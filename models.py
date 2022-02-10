@@ -109,8 +109,8 @@ class User(db.Model):
     liked_messages = db.relationship(
         "Message",
         secondary="likes",
-        primaryjoin=(Likes.user_id == id),
-        secondaryjoin=(Likes.message_being_liked_id == id),
+        # primaryjoin=(Likes.user_id == id),
+        # secondaryjoin=(Likes.message_being_liked_id == messages.id),
     )
 
     def __repr__(self):
@@ -132,7 +132,7 @@ class User(db.Model):
         """Does this user like `message`?"""
 
         found_messages_list = [
-            msg for msg in self.liked_messages if msg.message_id == message.id
+            msg for msg in self.liked_messages if msg.id == message.id
         ]
         return len(found_messages_list) == 1
 
@@ -208,8 +208,8 @@ class Message(db.Model):
     liked_by = db.relationship(
         "User",
         secondary="likes",
-        primaryjoin=(Likes.user_id == id),
-        secondaryjoin=(Likes.message_being_liked_id == id),
+        # primaryjoin=(Likes.user_id == User.id),
+        # secondaryjoin=(Likes.message_being_liked_id == id),
     )
 
     def is_liked_by(self, user):
