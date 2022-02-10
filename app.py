@@ -1,3 +1,4 @@
+from http.client import NOT_IMPLEMENTED
 from models import db, connect_db, User, Message, Likes
 from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
 from sqlalchemy import or_
@@ -233,8 +234,7 @@ def profile():
         return redirect("/")
 
     if form.validate_on_submit():
-        is_password_valid = User.authenticate(
-            g.user.username, form.password.data)
+        is_password_valid = User.authenticate(g.user.username, form.password.data)
 
         if is_password_valid:
             g.user.username = form.username.data
@@ -355,8 +355,7 @@ def homepage():
         following_ids = [f.id for f in g.user.following]
         messages = (
             Message.query.filter(
-                or_(Message.user_id.in_(following_ids),
-                    Message.user_id == g.user.id)
+                or_(Message.user_id.in_(following_ids), Message.user_id == g.user.id)
             )
             .order_by(Message.timestamp.desc())
             .limit(100)
@@ -384,16 +383,19 @@ def like_message(msg_id):
 
     if g.csrf_checking.validate_on_submit():
 
-        user_message_ids = [m.id for m in g.user.messages]
+        msg = Message.query.get(msg_id)
 
-        msg_liked = Message.query.filter(
-            not_(Message.id.in_(user_message_ids))).get(msg_id)
+        if msg not in g.user.messages:
 
-        g.user.liked_messages.append(msg_liked)
+            g.user.liked_messages.append(msg)
 
-        db.session.commit()
+            db.session.commit()
 
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+
+        else:
+            flash("Can't like your own messages", "warning")
+            return redirect(request.referrer)
     else:
         return redirect("/")
 
