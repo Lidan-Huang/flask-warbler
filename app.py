@@ -48,8 +48,9 @@ def add_user_to_g():
 def add_csrf_keys_to_g():
     """If we're logged in, add the WTF CSRF token to the Flask global"""
 
-    g.logout_form = CSRFProtectForm()
-    g.delete_form = CSRFProtectForm()
+    # g.logout_form = CSRFProtectForm()
+    # g.delete_form = CSRFProtectForm()
+    g.csrf_checking = CSRFProtectForm()
 
 
 def do_login(user):
@@ -130,7 +131,7 @@ def logout():
     if not g.user:
         flash("access unauthorized", "danger")
         return redirect("/")
-    if g.logout_form.validate_on_submit():
+    if g.csrf_checking.validate_on_submit():
         do_logout()
         flash("You have been sucessfully logout!")
         return redirect("/")
@@ -268,7 +269,7 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    if g.delete_form.validate_on_submit():
+    if g.csrf_checking.validate_on_submit():
 
         do_logout()
 
@@ -364,6 +365,14 @@ def homepage():
 
 ##############################################################################
 # Message Like routes:
+
+# @app.post('/msg/like/<int:msg_id>')
+# def like_message(msg_id):
+#     """Show liked messages and update the database"""
+
+#     msg_liked = Message.query.get(msg_id)
+
+
 
 
 ##############################################################################
