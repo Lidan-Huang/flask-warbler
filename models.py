@@ -31,7 +31,7 @@ class Follows(db.Model):
 
 
 class Likes(db.Model):
-    """Connect of message likes to the user"""
+    """Connect message likes to the user"""
 
     __tablename__ = "likes"
 
@@ -109,8 +109,6 @@ class User(db.Model):
     liked_messages = db.relationship(
         "Message",
         secondary="likes",
-        # primaryjoin=(Likes.user_id == id),
-        # secondaryjoin=(Likes.message_being_liked_id == messages.id),
     )
 
     def __repr__(self):
@@ -208,8 +206,6 @@ class Message(db.Model):
     liked_by = db.relationship(
         "User",
         secondary="likes",
-        # primaryjoin=(Likes.user_id == User.id),
-        # secondaryjoin=(Likes.message_being_liked_id == id),
     )
 
     def is_liked_by(self, user):

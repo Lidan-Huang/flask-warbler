@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
@@ -375,6 +375,7 @@ def homepage():
 @app.post("/msg/like/<int:msg_id>")
 def like_message(msg_id):
     """Show liked messages and update the database"""
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -383,20 +384,19 @@ def like_message(msg_id):
 
         msg_liked = Message.query.get(msg_id)
 
-        # print(msg_liked)
-        # print(g.user.liked_messages)
         g.user.liked_messages.append(msg_liked)
 
         db.session.commit()
 
-        return redirect(f'/users/{g.user.id}/likes')
+        return redirect(request.referrer)
     else:
-        return redirect('/')
+        return redirect("/")
 
 
-@app.post('/msg/stop-liking/<int:msg_id>')
+@app.post("/msg/stop-liking/<int:msg_id>")
 def stop_liking_message(msg_id):
     """Stop liking a liked message and update the DB"""
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -408,9 +408,10 @@ def stop_liking_message(msg_id):
         g.user.liked_messages.remove(msg_liked)
         db.session.commit()
 
-        return redirect(f'/users/{g.user.id}')
+        return redirect(request.referrer)
     else:
-        return redirect('/')
+        return redirect("/")
+
 
 ##############################################################################
 # Turn off all caching in Flask
