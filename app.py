@@ -30,7 +30,7 @@ connect_db(app)
 
 
 ##############################################################################
-# User signup/login/logout
+# ~~ User signup/login/logout
 
 
 @app.before_request
@@ -141,7 +141,7 @@ def logout():
 
 
 ##############################################################################
-# General user routes:
+# ~~ General user routes:
 
 
 @app.get("/users")
@@ -260,7 +260,6 @@ def profile():
         return render_template("/users/edit.html", form=form)
 
 
-# TODO: add CSRF token
 @app.post("/users/delete")
 def delete_user():
     """Delete user."""
@@ -281,8 +280,17 @@ def delete_user():
         return redirect("/signup")
 
 
+@app.get("/users/<int:user_id>/likes")
+def list_liked_messages_for_user(user_id):
+    """List all messages liked by a user."""
+
+    user = User.query.get(user_id)
+
+    return render_template("/users/likes.html", user=user)
+
+
 ##############################################################################
-# Messages routes:
+# ~~ Messages routes:
 
 
 @app.route("/messages/new", methods=["GET", "POST"])
@@ -332,7 +340,7 @@ def messages_destroy(message_id):
 
 
 ##############################################################################
-# Homepage and error pages
+# ~~ Homepage and error pages
 
 
 @app.get("/")
@@ -364,15 +372,19 @@ def homepage():
 
 
 ##############################################################################
-# Message Like routes:
-
-# @app.post('/msg/like/<int:msg_id>')
-# def like_message(msg_id):
-#     """Show liked messages and update the database"""
-
-#     msg_liked = Message.query.get(msg_id)
+# ~~ Message Like routes:
 
 
+@app.post("/msg/like/<int:msg_id>")
+def like_message(msg_id):
+    """Show liked messages and update the database"""
+
+    msg_liked = Message.query.get(msg_id)
+
+
+# @app.post('/msg/stop-liking/<int:msg_id>')
+# def stop_liking_message(msg_id):
+#     """Stop liking a liked message and update the DB"""
 
 
 ##############################################################################
