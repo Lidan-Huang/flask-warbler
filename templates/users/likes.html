@@ -62,7 +62,7 @@
             <div class="message-area">
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-              {% if g.user %}
+              {% if g.user and msg not in g.user.messages %}
                 {% if g.user.is_liking(msg)%}
                   <form method="POST" action="/msg/stop-liking/{{ msg.id }}">
                     {{ g.csrf_checking.hidden_tag() }}

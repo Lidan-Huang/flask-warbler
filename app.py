@@ -1,15 +1,14 @@
+from models import db, connect_db, User, Message, Likes
+from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
+from flask_debugtoolbar import DebugToolbarExtension
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for
-from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
-
-from forms import CSRFProtectForm, UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message, Likes
 
 CURR_USER_KEY = "curr_user"
 
@@ -234,7 +233,8 @@ def profile():
         return redirect("/")
 
     if form.validate_on_submit():
-        is_password_valid = User.authenticate(g.user.username, form.password.data)
+        is_password_valid = User.authenticate(
+            g.user.username, form.password.data)
 
         if is_password_valid:
             g.user.username = form.username.data
@@ -355,7 +355,8 @@ def homepage():
         following_ids = [f.id for f in g.user.following]
         messages = (
             Message.query.filter(
-                or_(Message.user_id.in_(following_ids), Message.user_id == g.user.id)
+                or_(Message.user_id.in_(following_ids),
+                    Message.user_id == g.user.id)
             )
             .order_by(Message.timestamp.desc())
             .limit(100)
@@ -383,7 +384,10 @@ def like_message(msg_id):
 
     if g.csrf_checking.validate_on_submit():
 
-        msg_liked = Message.query.get(msg_id)
+        user_message_ids = [m.id for m in g.user.messages]
+
+        msg_liked = Message.query.filter(
+            not_(Message.id.in_(user_message_ids))).get(msg_id)
 
         g.user.liked_messages.append(msg_liked)
 
