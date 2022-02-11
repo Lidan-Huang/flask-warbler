@@ -38,15 +38,8 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
-        self.u = User(
-            email="test@test.com", username="testuser", password="HASHED_PASSWORD"
-        )
-
-        self.u2 = User(
-            email="test2@test.com", username="testuser2", password="HASHED_PASSWORD"
-        )
-
-        db.session.add_all([self.u, self.u2])
+        self.u = User.signup("testuser", "test@test.com", "HASHED_PASSWORD", DEFAULT_IMAGE)
+        self.u2 = User.signup("testuser2", "test2@test.com", "HASHED_PASSWORD", DEFAULT_IMAGE)
         db.session.commit()
 
         self.client = app.test_client()
@@ -105,3 +98,14 @@ class UserModelTestCase(TestCase):
 
         self.assertFalse(response, True)
         self.assertEqual(len(User.query.all()), 2)
+
+    def test_authenticate(self):
+        
+        response = User.authenticate("testuser", "HASHED_PASSWORD")
+        self.assertEqual(response.email, "test@test.com")
+
+        response = User.authenticate("baduser", "HASHED_PASSWORD")
+        self.assertFalse(response, True)
+
+        response = User.authenticate("testuser", "HASHED_PASS")
+        self.assertFalse(response, True)
