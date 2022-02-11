@@ -8,7 +8,7 @@
 import os
 from unittest import TestCase
 
-from models import db, connect_db, Message, User
+from models import db, connect_db, Message, User, Likes, DEFAULT_IMAGE
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -70,3 +70,8 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+            
+            response_homepage = c.get('/')
+            html_homepage = response_homepage.get_data(as_text=True)
+
+            self.assertIn("Hello</p>", html_homepage)

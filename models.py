@@ -201,7 +201,7 @@ class Message(db.Model):
         nullable=False,
     )
 
-    user = db.relationship("User", cascade="all, delete")
+    user = db.relationship("User")
 
     liked_by = db.relationship(
         "User",
