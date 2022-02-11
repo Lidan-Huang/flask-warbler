@@ -211,9 +211,7 @@ class Message(db.Model):
     def is_liked_by(self, user):
         """Is this message liked by `user`?"""
 
-        found_users_list = [
-            liker for liker in self.liked_by if liker.user_id == user.id
-        ]
+        found_users_list = [liker for liker in self.liked_by if liker.id == user.id]
         return len(found_users_list) == 1
 
 
