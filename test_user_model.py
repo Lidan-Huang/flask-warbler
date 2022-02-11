@@ -5,6 +5,7 @@
 #    python -m unittest test_user_model.py
 
 
+from app import app
 import os
 from unittest import TestCase
 
@@ -19,7 +20,6 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
@@ -38,20 +38,37 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
-        self.client = app.test_client()
-
-    def test_user_model(self):
-        """Does basic model work?"""
-
-        u = User(
+        self.u = User(
             email="test@test.com",
             username="testuser",
             password="HASHED_PASSWORD"
         )
 
-        db.session.add(u)
+        self.u2 = User(
+            email="test2@test.com",
+            username="testuser2",
+            password="HASHED_PASSWORD"
+        )
+
+        db.session.add_all([self.u, self.u2])
         db.session.commit()
 
+        self.client = app.test_client()
+
+    def tearDown(self):
+        db.session.rollback()
+
+
+    def test_user_model(self):
+        """Does basic model work?"""
+
         # User should have no messages & no followers
-        self.assertEqual(len(u.messages), 0)
-        self.assertEqual(len(u.followers), 0)
+        self.assertEqual(len(self.u.messages), 0)
+        self.assertEqual(len(self.u.followers), 0)
+        self.assertEqual(
+            repr(self.u), f'<User #{self.u.id}: testuser, test@test.com>')
+
+    def test_is_following(self):
+        self.u.following.append(self.u2)
+        db.session.commit()
+        self.assertTrue(self.u.is_following(self.u2), True)
