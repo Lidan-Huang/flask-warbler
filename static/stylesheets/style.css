@@ -289,6 +289,15 @@ nav + .container {
   top: -2px
 }
 
+#messages .message-detail .like-widget{
+  position: inherit;
+  box-shadow: none;
+}
+
+#messages .message-detail .like-widget button:hover{
+  position: inherit;
+}
+
 #messages .list-group-item {
   display: flex;
   align-items: flex-start;

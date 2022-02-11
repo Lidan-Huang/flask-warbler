@@ -11,7 +11,25 @@
           <a href="/users/{{ user.id }}">
             <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
           </a>
-
+          <div class="like-widget">
+            {% if g.user and message not in g.user.messages %}
+              {% if g.user.is_liking(message)%}
+                <form method="POST" action="/msg/stop-liking/{{ message.id }}">
+                  {{ g.csrf_checking.hidden_tag() }}
+                  <button class="liked btn btn-primary btn-sm">
+                    <i class="fas fa-star"></i>
+                  </button>
+                </form>
+              {% else %}
+                <form method="POST" action="/msg/like/{{ message.id }}">
+                  {{ g.csrf_checking.hidden_tag() }}
+                  <button class="unliked btn btn-secondary btn-sm">
+                    <i class="far fa-star"></i>
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+          </div>
           <div class="message-area">
             <a href="/users/{{ user.id }}">@{{ user.username }}</a>
             <span class="text-muted">
