@@ -386,8 +386,11 @@ def like_message(msg_id):
         msg = Message.query.get(msg_id)
 
         if msg not in g.user.messages:
-
+            print(msg)
+            print(g.user.liked_messages)
             g.user.liked_messages.append(msg)
+            print(g.user.liked_messages)
+            
 
             db.session.commit()
 
