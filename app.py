@@ -321,6 +321,7 @@ def messages_show(message_id):
     """Show a message."""
 
     msg = Message.query.get(message_id)
+    breakpoint()
     return render_template("messages/show.html", message=msg)
 
 
@@ -384,21 +385,20 @@ def like_message(msg_id):
     if g.csrf_checking.validate_on_submit():
 
         msg = Message.query.get(msg_id)
-
+        breakpoint()
         if msg not in g.user.messages:
             print(msg)
             print(g.user.liked_messages)
             g.user.liked_messages.append(msg)
             print(g.user.liked_messages)
-            
 
             db.session.commit()
 
-            return redirect(request.referrer)
+            return redirect("/")  # FIXME: figure out better way to refresh page
 
         else:
             flash("Can't like your own messages", "warning")
-            return redirect(request.referrer)
+            return redirect("/")
     else:
         return redirect("/")
 
