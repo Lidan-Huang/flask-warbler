@@ -8,7 +8,15 @@
 import os
 from unittest import TestCase
 
-from models import db, connect_db, Message, User, Likes, DEFAULT_IMAGE, DEFAULT_HEADER_IMAGE
+from models import (
+    db,
+    connect_db,
+    Message,
+    User,
+    Likes,
+    DEFAULT_IMAGE,
+    DEFAULT_HEADER_IMAGE,
+)
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -70,7 +78,6 @@ class MessageViewTestCase(TestCase):
         self.testmsg1_id = testmsg1.id
         self.testmsg2_id = testmsg2.id
 
-
     def test_add_message(self):
         """Can user add a message? Does it show on the homepage,
         user page, and message detail page?"""
@@ -103,7 +110,7 @@ class MessageViewTestCase(TestCase):
 
             self.assertIn("Hello</p>", html_message_show_page)
 
-            response_user_show_page = c.get(f"/users/{self.testuser.id}")
+            response_user_show_page = c.get(f"/users/{self.testuser_id}")
             html_user_show_page = response_user_show_page.get_data(as_text=True)
 
             self.assertIn("Hello</p>", html_user_show_page)
@@ -142,7 +149,7 @@ class MessageViewTestCase(TestCase):
 
             self.assertNotIn("DeleteMePlease</p>", html_message_show_page)
 
-            response_user_show_page = c.get(f"/users/{self.testuser.id}")
+            response_user_show_page = c.get(f"/users/{self.testuser_id}")
             html_user_show_page = response_user_show_page.get_data(as_text=True)
 
             self.assertNotIn("DeleteMePlease</p>", html_user_show_page)
@@ -160,7 +167,8 @@ class MessageViewTestCase(TestCase):
             # test_message2 = Message.query.filter_by(text="blahblahblah").one()
             # print(test_message2)
             # breakpoint()
-            
+            resp = ""
+
             resp = c.post(f"/msg/like/{self.testmsg2_id}")
 
             # self.assertTrue(self.testmsg2.is_liked_by(self.testuser), True)
@@ -177,7 +185,7 @@ class MessageViewTestCase(TestCase):
 
             # self.assertNotIn("DeleteMePlease</p>", html_message_show_page)
 
-            # response_user_show_page = c.get(f"/users/{self.testuser.id}")
+            # response_user_show_page = c.get(f"/users/{self.testuser_id}")
             # html_user_show_page = response_user_show_page.get_data(as_text=True)
 
             # self.assertNotIn("DeleteMePlease</p>", html_user_show_page)
